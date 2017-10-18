@@ -1,6 +1,7 @@
 {
   "name": "fs-person-name",
   "main": "fs-person-name.html",
+  "version": "4.0.0",
   "dependencies": {
     "polymer": "Polymer/polymer#^2.0.0",
     "paper-input": "PolymerElements/paper-input#^2.0.2",
