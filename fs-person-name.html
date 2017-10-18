@@ -1,0 +1,253 @@
+<link rel="import" href="../polymer/polymer-element.html">
+<link rel="import" href="../polymer/lib/elements/dom-if.html">
+<link rel="import" href="../polymer/lib/mixins/mutable-data.html">
+<link rel="import" href="../paper-input/paper-input.html">
+
+<dom-module id="fs-person-name">
+  <template>
+    <style>
+      :host {
+        display: block;
+      }
+      
+      .toolbar {
+        visibility: hidden;
+        text-align: right;
+      }
+      
+      :host(:hover) .toolbar {
+        visibility: visible;
+      }
+      
+      .name-parts {
+        display: flex;
+      }
+      
+      .name-part {
+        flex: 1;
+      }
+      
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+    <template is="dom-if" if="[[editable]]">
+      <div class="toolbar">
+        <a id="edit" href hidden$="[[edit]]">Edit</a>
+        <a id="close" href hidden$="[[!edit]]">Close</a>
+        <a id="save" href hidden$="[[!_showSaveButton(edit, saveUrl)]]">Save</a>
+      </div>
+    </template>
+    <div class="name-parts" hidden$="[[!edit]]">
+      <paper-input label="Title" no-label-float value="{{_title}}"></paper-input>
+      <paper-input label="First Names" no-label-float value="{{_firstNames}}"></paper-input>
+      <paper-input label="Last Name" no-label-float value="{{_lastName}}"></paper-input>
+      <paper-input label="Suffix" no-label-float value="{{_suffix}}"></paper-input>
+    </div>
+    <div hidden$="[[edit]]">{{_title}} {{_firstNames}} {{_lastName}} {{_suffix}}</div>
+  </template>
+
+  <script>
+    /**
+     * `fs-person-name`
+     * 
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    class FsPersonName extends Polymer.MutableData(Polymer.Element) {
+      static get is() { return 'fs-person-name'; }
+      static get properties() {
+        return {
+          
+          name: {
+            type: Object,
+            observer: '_nameChanged',
+          },
+          
+          _title: {
+            type: String,
+            observer: '_titleChanged'
+          },
+          
+          _firstNames: {
+            type: String,
+            observer: '_firstNamesChanged'
+          },
+          
+          _lastName: {
+            type: String,
+            observer: '_lastNameChanged'
+          },
+          
+          _suffix: {
+            type: String,
+            observer: '_suffixChanged'
+          },
+          
+          /**
+           * Whether the fact can be edited. This will show a toolbar when the
+           * user hovers over the fact.
+           */
+          editable: {
+            type: Boolean,
+            value: false,
+            observer: '_setupEditable'
+          },
+          
+          /**
+           * Whether the fact is currently in edit mode
+           */
+          edit: {
+            type: Boolean,
+            value: false
+          },
+          
+          /**
+           * The URL that the fact data will be saved to.
+           */
+          saveUrl: String,
+          
+          /**
+           * Whether the fact is being saved
+           */
+          saving: {
+            type: Boolean,
+            value: false,
+            readOnly: true,
+            notify: true
+          }
+        };
+      }
+      
+      /**
+       * When the name changes, process the name parts and update the internal values
+       */
+      _nameChanged(name) {
+        const nameParts = this._getNameParts().reduce((accumulator, part) => {
+          accumulator[part.type].push(part.value);
+          return accumulator;
+        }, {
+          'http://gedcomx.org/Prefix': [],
+          'http://gedcomx.org/Given': [],
+          'http://gedcomx.org/Surname': [],
+          'http://gedcomx.org/Suffix': []
+        });
+        this._title = nameParts['http://gedcomx.org/Prefix'].join(' ');
+        this._firstNames = nameParts['http://gedcomx.org/Given'].join(' ');
+        this._lastName = nameParts['http://gedcomx.org/Surname'].join(' ');
+        this._suffix = nameParts['http://gedcomx.org/Suffix'].join(' ');
+      }
+      
+      _titleChanged(value) {
+        this._updateNameParts('http://gedcomx.org/Prefix', value);
+      }
+      
+      _firstNamesChanged(value) {
+        this._updateNameParts('http://gedcomx.org/Given', value);
+      }
+      
+      _lastNameChanged(value) {
+        this._updateNameParts('http://gedcomx.org/Surname', value);
+      }
+      
+      _suffixChanged(value) {
+        this._updateNameParts('http://gedcomx.org/Suffix', value);
+      }
+      
+      _updateNameParts(type, value) {
+        
+        if(value) {
+          value = value.trim();
+        }
+        
+        // First we filter out existing parts of that type
+        const nameParts = this._getNameParts().filter(p => p.type !== type);
+        
+        // Add the new part
+        if(value) {
+          nameParts.push({
+            type,
+            value
+          });
+        }
+        
+        // Update name parts
+        this._setNameParts(nameParts);
+      }
+      
+      _getNameParts() {
+        this._ensureNameForm();
+        return this.name.nameForms[0].parts;
+      }
+      
+      _setNameParts(parts) {
+        if(Array.isArray(parts)) {
+          this._ensureNameForm();
+          this.name.nameForms[0].parts = parts;
+          this.notifyPath('name');
+        }
+      }
+      
+      /**
+       * Make sure at last one name form exists with a parts array
+       */
+      _ensureNameForm() {
+        if(!this.name) {
+          this.name = {};
+        }
+        if(!Array.isArray(this.name.nameForms)) {
+          this.name.nameForms = [];
+        }
+        if(!this.name.nameForms[0]) {
+          this.name.nameForms.push({});
+        }
+        if(!Array.isArray(this.name.nameForms[0].parts)) {
+          this.name.nameForms[0].parts = [];
+        }
+      }
+      
+      _setupEditable(editable) {
+        if(editable) {
+          setTimeout(() => {
+            this.shadowRoot.querySelector('#edit').addEventListener('click', (e) => {
+              this.edit = true;
+              e.preventDefault();
+            });
+            this.shadowRoot.querySelector('#close').addEventListener('click', (e) => {
+              this.edit = false;
+              e.preventDefault();
+            });
+            this.shadowRoot.querySelector('#save').addEventListener('click', (e) => {
+              this.edit = false;
+              e.preventDefault();
+              if(this.saveUrl) {
+                const request = new FSRequest();
+                request.url = this.saveUrl;
+                request.method = 'POST';
+                request.body = {
+                  persons: [{
+                    // TODO: how do we calculate the data to post?
+                    // names: [this.fact]
+                  }]
+                };
+                request.addEventListener('loading-changed', (e) => {
+                  this._setSaving(e.detail.value);
+                });
+                request.generateRequest();
+              }
+            });
+          });
+        }
+      }
+      
+      _showSaveButton(edit, saveUrl) {
+        return edit && saveUrl;
+      }
+      
+    }
+
+    window.customElements.define(FsPersonName.is, FsPersonName);
+  </script>
+</dom-module>
