@@ -13,36 +13,38 @@
   </head>
   <body>
 
-    <test-fixture id="BasicTestFixture">
+    <test-fixture id="change-part">
       <template>
         <fs-person-name></fs-person-name>
-      </template>
-    </test-fixture>
-
-    <test-fixture id="ChangedPropertyTestFixture">
-      <template>
-        <fs-person-name prop1="new-prop1"></fs-person-name>
       </template>
     </test-fixture>
 
     <script>
       suite('fs-person-name', function() {
 
-        test('instantiating the element with default properties works', function() {
-          var element = fixture('BasicTestFixture');
-          assert.equal(element.prop1, 'fs-person-name');
-          var elementShadowRoot = element.shadowRoot;
-          var elementHeader = elementShadowRoot.querySelector('h2');
-          assert.equal(elementHeader.innerHTML, 'Hello fs-person-name!');
-        });
-
-        test('setting a property on the element works', function() {
-          // Create a test fixture
-          var element = fixture('ChangedPropertyTestFixture');
-          assert.equal(element.prop1, 'new-prop1');
-          var elementShadowRoot = element.shadowRoot;
-          var elementHeader = elementShadowRoot.querySelector('h2');
-          assert.equal(elementHeader.innerHTML, 'Hello new-prop1!');
+        test('changing a name part works', function() {
+          var element = fixture('change-part');
+          element.name = {
+            nameForms: [{
+              parts: [{
+                type: 'http://gedcomx.org/Given',
+                value: 'Mary'
+              }, {
+                type: 'http://gedcomx.org/Surname',
+                value: 'Smith'
+              }]
+            }]
+          };
+          assert.equal(element._given, 'Mary');
+          assert.equal(element._surname, 'Smith');
+          assert.equal(element._prefix, '');
+          assert.equal(element._suffix, '');
+          assert.equal(element.name.nameForms[0].parts.length, 2);
+          
+          element._prefix = 'Mrs';
+          assert.equal(element.name.nameForms[0].parts.length, 3);
+          assert.equal(element.name.nameForms[0].parts[2].type, 'http://gedcomx.org/Prefix');
+          assert.equal(element.name.nameForms[0].parts[2].value, 'Mrs');
         });
 
       });

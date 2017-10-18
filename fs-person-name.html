@@ -40,12 +40,12 @@
       </div>
     </template>
     <div class="name-parts" hidden$="[[!edit]]">
-      <paper-input label="Title" no-label-float value="{{_title}}"></paper-input>
-      <paper-input label="First Names" no-label-float value="{{_firstNames}}"></paper-input>
-      <paper-input label="Last Name" no-label-float value="{{_lastName}}"></paper-input>
+      <paper-input label="Title" no-label-float value="{{_prefix}}"></paper-input>
+      <paper-input label="First Names" no-label-float value="{{_given}}"></paper-input>
+      <paper-input label="Last Name" no-label-float value="{{_surname}}"></paper-input>
       <paper-input label="Suffix" no-label-float value="{{_suffix}}"></paper-input>
     </div>
-    <div hidden$="[[edit]]">{{_title}} {{_firstNames}} {{_lastName}} {{_suffix}}</div>
+    <div hidden$="[[edit]]">{{_prefix}} {{_given}} {{_surname}} {{_suffix}}</div>
   </template>
 
   <script>
@@ -67,19 +67,19 @@
             observer: '_nameChanged',
           },
           
-          _title: {
+          _prefix: {
             type: String,
-            observer: '_titleChanged'
+            observer: '_prefixChanged'
           },
           
-          _firstNames: {
+          _given: {
             type: String,
-            observer: '_firstNamesChanged'
+            observer: '_givenChanged'
           },
           
-          _lastName: {
+          _surname: {
             type: String,
-            observer: '_lastNameChanged'
+            observer: '_surnameChanged'
           },
           
           _suffix: {
@@ -127,21 +127,21 @@
        */
       _nameChanged(name) {
         const nameParts = this._namePartsMap(this._getNameParts());
-        this._title = nameParts['http://gedcomx.org/Prefix'];
-        this._firstNames = nameParts['http://gedcomx.org/Given'];
-        this._lastName = nameParts['http://gedcomx.org/Surname'];
+        this._prefix = nameParts['http://gedcomx.org/Prefix'];
+        this._given = nameParts['http://gedcomx.org/Given'];
+        this._surname = nameParts['http://gedcomx.org/Surname'];
         this._suffix = nameParts['http://gedcomx.org/Suffix'];
       }
       
-      _titleChanged(value) {
+      _prefixChanged(value) {
         this._updateNameParts('http://gedcomx.org/Prefix', value);
       }
       
-      _firstNamesChanged(value) {
+      _givenChanged(value) {
         this._updateNameParts('http://gedcomx.org/Given', value);
       }
       
-      _lastNameChanged(value) {
+      _surnameChanged(value) {
         this._updateNameParts('http://gedcomx.org/Surname', value);
       }
       
