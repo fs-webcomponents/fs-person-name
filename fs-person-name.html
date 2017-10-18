@@ -2,6 +2,7 @@
 <link rel="import" href="../polymer/lib/elements/dom-if.html">
 <link rel="import" href="../polymer/lib/mixins/mutable-data.html">
 <link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../fs-request/fs-request.html">
 
 <dom-module id="fs-person-name">
   <template>
@@ -125,19 +126,11 @@
        * When the name changes, process the name parts and update the internal values
        */
       _nameChanged(name) {
-        const nameParts = this._getNameParts().reduce((accumulator, part) => {
-          accumulator[part.type].push(part.value);
-          return accumulator;
-        }, {
-          'http://gedcomx.org/Prefix': [],
-          'http://gedcomx.org/Given': [],
-          'http://gedcomx.org/Surname': [],
-          'http://gedcomx.org/Suffix': []
-        });
-        this._title = nameParts['http://gedcomx.org/Prefix'].join(' ');
-        this._firstNames = nameParts['http://gedcomx.org/Given'].join(' ');
-        this._lastName = nameParts['http://gedcomx.org/Surname'].join(' ');
-        this._suffix = nameParts['http://gedcomx.org/Suffix'].join(' ');
+        const nameParts = this._namePartsMap(this._getNameParts());
+        this._title = nameParts['http://gedcomx.org/Prefix'];
+        this._firstNames = nameParts['http://gedcomx.org/Given'];
+        this._lastName = nameParts['http://gedcomx.org/Surname'];
+        this._suffix = nameParts['http://gedcomx.org/Suffix'];
       }
       
       _titleChanged(value) {
@@ -186,8 +179,43 @@
         if(Array.isArray(parts)) {
           this._ensureNameForm();
           this.name.nameForms[0].parts = parts;
+          this.name.nameForms[0].fullText = this._calculateFullText(parts);
           this.notifyPath('name');
         }
+      }
+      
+      /**
+       * Given an array of name parts, create a map of type => values.join(' ')
+       */
+      _namePartsMap(parts) {
+        const map = {
+          'http://gedcomx.org/Prefix': [],
+          'http://gedcomx.org/Given': [],
+          'http://gedcomx.org/Surname': [],
+          'http://gedcomx.org/Suffix': []
+        };
+        if(Array.isArray(parts)) {
+          parts.forEach(part => {
+            map[part.type].push(part.value);
+          });
+        }
+        for(let type in map) {
+          map[type] = map[type].join(' ');
+        }
+        return map;
+      }
+      
+      /**
+       * Calculate full text from a list of name parts
+       */
+      _calculateFullText(parts) {
+        const partsMap = this._namePartsMap(parts);
+        return [
+          partsMap['http://gedcomx.org/Prefix'],
+          partsMap['http://gedcomx.org/Given'],
+          partsMap['http://gedcomx.org/Surname'],
+          partsMap['http://gedcomx.org/Suffix']
+        ].filter(part => !!part).join(' ');
       }
       
       /**
@@ -228,8 +256,7 @@
                 request.method = 'POST';
                 request.body = {
                   persons: [{
-                    // TODO: how do we calculate the data to post?
-                    // names: [this.fact]
+                    names: [this.name]
                   }]
                 };
                 request.addEventListener('loading-changed', (e) => {

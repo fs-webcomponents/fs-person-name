@@ -10,6 +10,8 @@
 
     <link rel="import" href="../../iron-demo-helpers/demo-pages-shared-styles.html">
     <link rel="import" href="../../iron-demo-helpers/demo-snippet.html">
+    <link rel="import" href="../../fs-client/fs-client.html">
+    <link rel="import" href="../../fs-signin/fs-signin.html">
     <link rel="import" href="../fs-person-name.html">
 
     <custom-style>
@@ -42,6 +44,8 @@
       };
     </script>
     <div class="vertical-section-container centered">
+      <fs-client id="client" app-key="a02j00000099Mc2AAE" redirect-uri="." save-access-token exchange-code redirect-after-sign-in="."></fs-client>
+      <fs-signin></fs-signin>
       <h3>Empty fs-person-name demo</h3>
       <demo-snippet>
         <template>
@@ -60,7 +64,7 @@
       <h3>Editable fs-person-name</h3>
       <demo-snippet>
         <template>
-          <fs-person-name editable id="editable"></fs-person-name>
+          <fs-person-name id="editable" editable save-url="https://integration.familysearch.org/platform/tree/persons/L58F-778"></fs-person-name>
           <script>
             document.getElementById('editable').name = names.PorterClark;
           </script>
