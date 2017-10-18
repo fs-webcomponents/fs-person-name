@@ -3,6 +3,7 @@
 <link rel="import" href="../polymer/lib/mixins/mutable-data.html">
 <link rel="import" href="../paper-input/paper-input.html">
 <link rel="import" href="../fs-request/fs-request.html">
+<link rel="import" href="../fs-attribution/fs-attribution.html">
 
 <dom-module id="fs-person-name">
   <template>
@@ -50,6 +51,12 @@
       <paper-input label="Suffix" no-label-float value="{{_suffix}}"></paper-input>
     </div>
     <div hidden$="[[edit]]">{{_prefix}} {{_given}} {{_surname}} {{_suffix}}</div>
+    <template is="dom-if" if="[[editable]]">
+      <fs-attribution 
+        hidden$="[[!edit]]" 
+        attribution="{{name.attribution}}"
+        edit="[[edit]]"></fs-attribution>
+    </template>
   </template>
 
   <script>
