@@ -24,8 +24,12 @@
         display: flex;
       }
       
-      .name-part {
+      paper-input {
         flex: 1;
+      }
+      
+      paper-input:not(:first-child) {
+        margin-left: 8px;
       }
       
       [hidden] {
