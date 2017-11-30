@@ -262,7 +262,7 @@
               this.edit = false;
               e.preventDefault();
               if(this.saveUrl) {
-                const request = new FSRequest();
+                const request = document.createElement('fs-request');
                 request.url = this.saveUrl;
                 request.method = 'POST';
                 request.body = {
@@ -270,9 +270,11 @@
                     names: [this.name]
                   }]
                 };
+                request.delegateEvents(this);
                 request.addEventListener('loading-changed', (e) => {
                   this._setSaving(e.detail.value);
                 });
+                request.ready();
                 request.generateRequest();
               }
             });
