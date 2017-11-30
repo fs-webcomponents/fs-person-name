@@ -2,6 +2,7 @@
 <link rel="import" href="../polymer/lib/elements/dom-if.html">
 <link rel="import" href="../polymer/lib/mixins/mutable-data.html">
 <link rel="import" href="../paper-input/paper-input.html">
+<link rel="import" href="../fs-api-aware/fs-api-aware.html">
 <link rel="import" href="../fs-request/fs-request.html">
 <link rel="import" href="../fs-attribution/fs-attribution.html">
 
@@ -53,7 +54,8 @@
     <div hidden$="[[edit]]">{{_prefix}} {{_given}} {{_surname}} {{_suffix}}</div>
     <template is="dom-if" if="[[editable]]">
       <fs-attribution 
-        hidden$="[[!edit]]" 
+        hidden$="[[!edit]]"
+        client-name="[[clientName]]"
         attribution="{{name.attribution}}"
         edit="[[edit]]"></fs-attribution>
     </template>
@@ -68,7 +70,7 @@
      * @polymer
      * @demo demo/index.html
      */
-    class FsPersonName extends Polymer.MutableData(Polymer.Element) {
+    class FsPersonName extends Polymer.MutableData(FSApiAwareMixin(Polymer.Element)) {
       static get is() { return 'fs-person-name'; }
       static get properties() {
         return {
@@ -264,6 +266,7 @@
               if(this.saveUrl) {
                 const request = document.createElement('fs-request');
                 request.url = this.saveUrl;
+                request.clientName = this.clientName;
                 request.method = 'POST';
                 request.body = {
                   persons: [{
