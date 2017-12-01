@@ -6,7 +6,7 @@
     "polymer": "Polymer/polymer#^2.0.0",
     "paper-input": "PolymerElements/paper-input#^2.0.2",
     "fs-person-mixin": "fs-webcomponents/fs-person-mixin#^4.0.0",
-    "fs-conclusion-mixin": "fs-webcomponents/fs-conclusion-mixin"
+    "fs-conclusion-mixin": "fs-webcomponents/fs-conclusion-mixin#^4.0.0"
   },
   "devDependencies": {
     "iron-demo-helpers": "PolymerElements/iron-demo-helpers#^2.0.0",
