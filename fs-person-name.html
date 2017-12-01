@@ -2,26 +2,11 @@
 <link rel="import" href="../polymer/lib/elements/dom-if.html">
 <link rel="import" href="../polymer/lib/mixins/mutable-data.html">
 <link rel="import" href="../paper-input/paper-input.html">
-<link rel="import" href="../fs-api-aware/fs-api-aware.html">
-<link rel="import" href="../fs-request/fs-request.html">
-<link rel="import" href="../fs-attribution/fs-attribution.html">
+<link rel="import" href="../fs-conclusion-mixin/fs-conclusion-mixin.html">
 
 <dom-module id="fs-person-name">
   <template>
     <style>
-      :host {
-        display: block;
-      }
-      
-      .toolbar {
-        visibility: hidden;
-        text-align: right;
-      }
-      
-      :host(:hover) .toolbar {
-        visibility: visible;
-      }
-      
       .name-parts {
         display: flex;
       }
@@ -38,13 +23,6 @@
         display: none !important;
       }
     </style>
-    <template is="dom-if" if="[[editable]]">
-      <div class="toolbar">
-        <a id="edit" href hidden$="[[edit]]">Edit</a>
-        <a id="close" href hidden$="[[!edit]]">Close</a>
-        <a id="save" href hidden$="[[!_showSaveButton(edit, saveUrl)]]">Save</a>
-      </div>
-    </template>
     <div class="name-parts" hidden$="[[!edit]]">
       <paper-input label="Title" no-label-float value="{{_prefix}}"></paper-input>
       <paper-input label="First Names" no-label-float value="{{_given}}"></paper-input>
@@ -52,13 +30,6 @@
       <paper-input label="Suffix" no-label-float value="{{_suffix}}"></paper-input>
     </div>
     <div hidden$="[[edit]]">{{_prefix}} {{_given}} {{_surname}} {{_suffix}}</div>
-    <template is="dom-if" if="[[editable]]">
-      <fs-attribution 
-        hidden$="[[!edit]]"
-        client-name="[[clientName]]"
-        attribution="{{name.attribution}}"
-        edit="[[edit]]"></fs-attribution>
-    </template>
   </template>
 
   <script>
@@ -70,7 +41,7 @@
      * @polymer
      * @demo demo/index.html
      */
-    class FsPersonName extends Polymer.MutableData(FSApiAwareMixin(Polymer.Element)) {
+    class FsPersonName extends Polymer.MutableData(FsConclusionMixin(Polymer.Element)) {
       static get is() { return 'fs-person-name'; }
       static get properties() {
         return {
@@ -98,47 +69,20 @@
           _suffix: {
             type: String,
             observer: '_suffixChanged'
-          },
-          
-          /**
-           * Whether the fact can be edited. This will show a toolbar when the
-           * user hovers over the fact.
-           */
-          editable: {
-            type: Boolean,
-            value: false,
-            observer: '_setupEditable'
-          },
-          
-          /**
-           * Whether the fact is currently in edit mode
-           */
-          edit: {
-            type: Boolean,
-            value: false
-          },
-          
-          /**
-           * The URL that the fact data will be saved to.
-           */
-          saveUrl: String,
-          
-          /**
-           * Whether the fact is being saved
-           */
-          saving: {
-            type: Boolean,
-            value: false,
-            readOnly: true,
-            notify: true
           }
+          
         };
+      }
+      
+      static get template() {
+        return super.conclusionTemplate(this.is);
       }
       
       /**
        * When the name changes, process the name parts and update the internal values
        */
       _nameChanged(name) {
+        this.conclusion = name;
         const nameParts = this._namePartsMap(this._getNameParts());
         this._prefix = nameParts['http://gedcomx.org/Prefix'];
         this._given = nameParts['http://gedcomx.org/Given'];
@@ -160,6 +104,14 @@
       
       _suffixChanged(value) {
         this._updateNameParts('http://gedcomx.org/Suffix', value);
+      }
+      
+      _conclusionBody() {
+        return {
+          persons: [{
+            names: [this.name]
+          }]
+        };
       }
       
       _updateNameParts(type, value) {
@@ -247,46 +199,6 @@
         if(!Array.isArray(this.name.nameForms[0].parts)) {
           this.name.nameForms[0].parts = [];
         }
-      }
-      
-      _setupEditable(editable) {
-        if(editable) {
-          setTimeout(() => {
-            this.shadowRoot.querySelector('#edit').addEventListener('click', (e) => {
-              this.edit = true;
-              e.preventDefault();
-            });
-            this.shadowRoot.querySelector('#close').addEventListener('click', (e) => {
-              this.edit = false;
-              e.preventDefault();
-            });
-            this.shadowRoot.querySelector('#save').addEventListener('click', (e) => {
-              this.edit = false;
-              e.preventDefault();
-              if(this.saveUrl) {
-                const request = document.createElement('fs-request');
-                request.url = this.saveUrl;
-                request.clientName = this.clientName;
-                request.method = 'POST';
-                request.body = {
-                  persons: [{
-                    names: [this.name]
-                  }]
-                };
-                request.delegateEvents(this);
-                request.addEventListener('loading-changed', (e) => {
-                  this._setSaving(e.detail.value);
-                });
-                request.ready();
-                request.generateRequest();
-              }
-            });
-          });
-        }
-      }
-      
-      _showSaveButton(edit, saveUrl) {
-        return edit && saveUrl;
       }
       
     }
